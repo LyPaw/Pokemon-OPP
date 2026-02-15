@@ -1,25 +1,45 @@
+import java.util.ArrayList;
+
 public class Pokémon {
 
+    int id;
     String nombre;
-    String tipo;
-    String ataque1;
-    String ataque2;
-    String ataque3;
-    String ataque4;
+    TipoPokemon tipoPrincipal;
+    TipoPokemon tipoSecundario;
+    Generacion generacion;
+    int nivel;
+    int ps;
+    int psMax;
+    ArrayList<Ataque> ataques = new ArrayList<>();
 
-    public Pokémon(String nombre, String tipo, String ataque1, String ataque2, String ataque3, String ataque4) {
+
+    public Pokémon(int id, String nombre, TipoPokemon tipoPrincipal, TipoPokemon tipoSecundario, Generacion generacion, int nivel, int ps, int psMax) {
+        this.id = id;
         this.nombre = nombre;
-        this.tipo = tipo;
-        this.ataque1 = ataque1;
-        this.ataque2 = ataque2;
-        this.ataque3 = ataque3;
-        this.ataque4 = ataque4;
+        this.tipoPrincipal = tipoPrincipal;
+        this.tipoSecundario = tipoSecundario;
+        this.generacion = generacion;
+        this.nivel = nivel;
+        this.ps = ps;
+        this.psMax = psMax;
     }
 
-        @Override
-            public String toString() {
-                return "||Pokémon: " + nombre;
+    public void aprenderAtaque(Ataque ataque) {
+        ataques.add(ataque);
+    }
 
-            }
+    public String getNombre() {
+        return nombre;
+    }
+
+
+    @Override
+    public String toString() {
+        return "|" + nombre;
+    }
+
+    public String mostrarAtaques(){
+        return ataques.toString();
+    }
 
 }

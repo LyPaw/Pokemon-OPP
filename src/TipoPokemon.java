@@ -1,0 +1,20 @@
+public enum TipoPokemon {
+    NORMAL,
+    FUEGO,
+    AGUA,
+    PLANTA,
+    ELECTRICO,
+    TIERRA,
+    ROCA,
+    BICHO,
+    FANTASMA,
+    ACERO,
+    VOLADOR,
+    LUCHA,
+    PSIQUICO,
+    VENENO,
+    DRAGON,
+    HIELO,
+    SINIESTRO,
+    HADA
+}
