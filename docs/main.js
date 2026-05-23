@@ -1,13 +1,4 @@
-/* ══════════════════════════════════════════════════════
-   PomeBall — Lógica principal
-   Autor: LyPaw
-   Separado en archivo externo para mejor mantenimiento
-══════════════════════════════════════════════════════ */
-
-// ══════════════════════════════════════════════════════
-// TEMA (claro / oscuro)
-// ══════════════════════════════════════════════════════
-
+// THEME
 function toggleTheme() {
   const html   = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
@@ -15,43 +6,28 @@ function toggleTheme() {
   document.getElementById('themeToggle').textContent = isDark ? '◐ TEMA' : '◑ TEMA';
   localStorage.setItem('pk-theme', isDark ? 'light' : 'dark');
 }
-
-// Aplicar tema guardado al cargar
 const savedTheme = localStorage.getItem('pk-theme');
 if (savedTheme) {
   document.documentElement.setAttribute('data-theme', savedTheme);
   if (savedTheme === 'dark') document.getElementById('themeToggle').textContent = '◑ TEMA';
 }
 
-// ══════════════════════════════════════════════════════
-// SPRITES — URLs y carga con fallback
-// ══════════════════════════════════════════════════════
-
-/**
- * Convierte el nombre de un Pokémon al slug de Pokémon Showdown.
- * Ej: "Farfetch'd" → "farfetchd"  |  "Nidoran♀" → "nidoranf"
- */
+// SPRITES
 function toShowdownName(nombre) {
   return nombre
     .toLowerCase()
-    .normalize('NFD')               // descompone caracteres con tilde (é → e + ́)
-    .replace(/[\u0300-\u036f]/g, '') // elimina los diacríticos
-    .replace(/♀/g, 'f')             // símbolo femenino → f
-    .replace(/♂/g, 'm')             // símbolo masculino → m
-    .replace(/[^a-z0-9]/g, '');     // elimina todo lo que no sea letra/número
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/♀/g, 'f')
+    .replace(/♂/g, 'm')
+    .replace(/[^a-z0-9]/g, '');
 }
-
-// URLs de sprites normales — prioridad: Showdown animated GIF → BW animated GIF → PNG estático
 const SPRITE_SHOWDOWN  = nombre => `https://play.pokemonshowdown.com/sprites/ani/${toShowdownName(nombre)}.gif`;
 const SPRITE_BW        = id     => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`;
 const SPRITE_PNG       = id     => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
-
-// URLs de sprites shiny
 const SPRITE_SHINY_SD  = nombre => `https://play.pokemonshowdown.com/sprites/ani-shiny/${toShowdownName(nombre)}.gif`;
 const SPRITE_SHINY_BW  = id     => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/shiny/${id}.gif`;
 const SPRITE_SHINY_PNG = id     => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`;
-
-// Pokéball SVG como fallback (data URI)
 const POKEBALL_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
     <circle cx="50" cy="50" r="48" fill="white" stroke="%23333" stroke-width="3"/>
@@ -61,12 +37,10 @@ const POKEBALL_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
   </svg>
 `)}`;
 
-/** Carga sprite normal con fallback: Showdown → BW animated → PNG estático → Pokéball */
 function setSpriteWithFallback(imgEl, id, nombre, loaderEl) {
   const pokeName = nombre || imgEl.alt || String(id);
   if (loaderEl) loaderEl.classList.add('visible');
   imgEl.classList.add('loading');
-
   imgEl.onload = () => {
     imgEl.classList.remove('loading');
     if (loaderEl) loaderEl.classList.remove('visible');
@@ -86,13 +60,10 @@ function setSpriteWithFallback(imgEl, id, nombre, loaderEl) {
     };
   };
 }
-
-/** Carga sprite shiny con fallback: Showdown shiny → BW shiny → PNG shiny estático → Pokéball */
 function setShinyWithFallback(imgEl, id, nombre, loaderEl) {
   const pokeName = nombre || imgEl.alt || String(id);
   if (loaderEl) loaderEl.classList.add('visible');
   imgEl.classList.add('loading');
-
   imgEl.onload = () => {
     imgEl.classList.remove('loading');
     if (loaderEl) loaderEl.classList.remove('visible');
@@ -112,35 +83,10 @@ function setShinyWithFallback(imgEl, id, nombre, loaderEl) {
     };
   };
 }
-
-/** Carga sprite shiny con fallback: Showdown shiny → BW shiny → PNG shiny estático */
-function setShinyWithFallback(imgEl, id, nombre, loaderEl) {
-  const pokeName = nombre || imgEl.alt || String(id);
-  if (loaderEl) loaderEl.classList.add('visible');
-  imgEl.classList.add('loading');
-
-  imgEl.onload = () => {
-    imgEl.classList.remove('loading');
-    if (loaderEl) loaderEl.classList.remove('visible');
-    imgEl.onload = null;
-  };
-  imgEl.src = SPRITE_SHINY_SD(pokeName);
-  imgEl.onerror = function () {
-    this.onerror = null;
-    this.src = SPRITE_SHINY_BW(id);
-    this.onerror = function () {
-      this.onerror = null;
-      this.src = SPRITE_SHINY_PNG(id);
-    };
-  };
-}
-
-/** Alterna entre sprite normal y shiny en la card */
 function toggleShiny(btn, id, nombre) {
   const card    = btn.closest('.gc-card');
   const img     = card.querySelector('img[data-id]');
   const isShiny = btn.classList.contains('active');
-
   if (isShiny) {
     btn.classList.remove('active');
     card.classList.remove('shiny');
@@ -154,15 +100,9 @@ function toggleShiny(btn, id, nombre) {
   }
 }
 
-// ══════════════════════════════════════════════════════
-// SONIDO — Gritos de Pokémon
-// ══════════════════════════════════════════════════════
-
-const CRY_URL = id =>
-  `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`;
-
+// SOUND
+const CRY_URL = id => `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${id}.ogg`;
 let currentAudio = null;
-
 function playSound(id, cardEl) {
   if (currentAudio) {
     currentAudio.pause();
@@ -171,15 +111,12 @@ function playSound(id, cardEl) {
   }
   const audio = new Audio(CRY_URL(id));
   currentAudio = audio;
-  cardEl.classList.add('playing');
+  if (cardEl) cardEl.classList.add('playing');
   audio.play().catch(() => {});
-  audio.onended = () => cardEl.classList.remove('playing');
+  audio.onended = () => { if (cardEl) cardEl.classList.remove('playing'); };
 }
 
-// ══════════════════════════════════════════════════════
-// DATOS ESTÁTICOS
-// ══════════════════════════════════════════════════════
-
+// STATIC DATA
 const TIPO_COLORS = {
   fuego:'#e05010',     agua:'#2288CC',       planta:'#338833',
   veneno:'#8844AA',    normal:'#888860',      electrico:'#BB9900',
@@ -189,17 +126,13 @@ const TIPO_COLORS = {
   'psíquico':'#CC3366', 'dragón':'#5522CC',  siniestro:'#554433',
   hada:'#BB5577',
 };
-
 const MAX_STAT = 255;
 const STAT_LABELS = {
   ps:'PS', ataque:'ATAQUE', defensa:'DEFENSA',
   atesp:'AT.ESP', defesp:'DEF.ESP', velocidad:'VELOCIDAD',
 };
 
-// ══════════════════════════════════════════════════════
-// ESTADO DE LA APLICACIÓN
-// ══════════════════════════════════════════════════════
-
+// STATE
 let allPokemons    = [];
 let PERFILES       = {};
 let CURIOSIDADES   = {};
@@ -208,180 +141,337 @@ let currentSearch   = '';
 let currentSearchId = '';
 let activeGens      = new Set();
 let activeTipos     = new Set();
+let dataLoaded      = false;
 
-// ══════════════════════════════════════════════════════
-// CARGA DE DATOS (JSON)
-// ══════════════════════════════════════════════════════
-
-async function loadPokemons() {
+// INDEXEDDB
+const DB_NAME = 'PomeBall';
+const DB_VER  = 2;
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('data')) {
+        db.createObjectStore('data');
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function saveToCache(key, data) {
   try {
-    const [pokemonsRes, perfilesRes, curiosidadesRes] = await Promise.all([
-      fetch('pokemons.json'),
-      fetch('perfiles.json'),
-      fetch('curiosidades.json'),
+    const db = await openDB();
+    const tx = db.transaction('data', 'readwrite');
+    tx.objectStore('data').put(data, key);
+    tx.objectStore('data').put(Date.now(), key + '_ts');
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = resolve;
+      tx.onerror = reject;
+    });
+    db.close();
+  } catch (_) {}
+}
+async function loadFromCache(key) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction('data', 'readonly');
+    const store = tx.objectStore('data');
+    const [data, ts] = await Promise.all([
+      new Promise(r => { const q = store.get(key); q.onsuccess = () => r(q.result); }),
+      new Promise(r => { const q = store.get(key + '_ts'); q.onsuccess = () => r(q.result); }),
     ]);
-
-    // Soporta tanto array plano como { generacion_1: [...], generacion_2: [...], ... }
-    const pokemonsData = await pokemonsRes.json();
-    allPokemons = Array.isArray(pokemonsData)
-      ? pokemonsData
-      : Object.values(pokemonsData).flat();
-
-    PERFILES     = await perfilesRes.json();
-    CURIOSIDADES = await curiosidadesRes.json();
-
-    // sprite_sizes.json es opcional — no bloquea la carga si no existe
-    try {
-      const sizesRes = await fetch('sprite_sizes.json');
-      if (sizesRes.ok) SPRITE_SIZES = await sizesRes.json();
-    } catch (_) { /* archivo no disponible, se ignora */ }
-
-    render();
-  } catch (e) {
-    document.getElementById('grid').innerHTML =
-      '<div class="gc-empty">ERROR: NO SE PUDO CARGAR<br>pokemons.json / perfiles.json / curiosidades.json</div>';
+    db.close();
+    if (data && ts && (Date.now() - ts < 86400000)) return data;
+    return null;
+  } catch (_) {
+    return null;
   }
 }
 
-// ══════════════════════════════════════════════════════
-// RENDER — Genera las cards del grid
-// ══════════════════════════════════════════════════════
+// WEB WORKER
+const dataWorker = new Worker('dataWorker.js');
+dataWorker.addEventListener('message', (e) => {
+  const { type, payload, error } = e.data;
+  if (type === 'DATA_READY') {
+    allPokemons  = payload.pokemons;
+    PERFILES     = payload.perfiles;
+    CURIOSIDADES = payload.curiosidades;
+    SPRITE_SIZES = payload.sprite_sizes || {};
+    dataLoaded   = true;
+    saveToCache('pokemons', allPokemons);
+    saveToCache('perfiles', PERFILES);
+    saveToCache('curiosidades', CURIOSIDADES);
+    saveToCache('sprite_sizes', SPRITE_SIZES);
+    initScroller();
+  } else if (type === 'FILTER_RESULT') {
+    if (scroller) scroller.updateItems(payload);
+    document.getElementById('count').textContent = payload.length;
+  } else if (type === 'ERROR') {
+    document.getElementById('grid').innerHTML =
+      `<div class="gc-empty">ERROR: ${error}<br>NO SE PUDIERON CARGAR LOS DATOS</div>`;
+  }
+});
 
-function render() {
+// INTERSECTION OBSERVER — Lazy sprites
+const spriteObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target;
+      spriteObserver.unobserve(img);
+      const rawId   = parseInt(img.dataset.id);
+      const poke    = allPokemons.find(x => x.id === rawId) || {};
+      const spriteId = poke.base_id || rawId;
+      const nombre  = poke.nombre_forma || poke.nombre || img.dataset.nombre || img.alt;
+      const sizes   = SPRITE_SIZES[String(rawId)] || SPRITE_SIZES[String(spriteId)];
+      if (sizes && sizes.card) {
+        img.style.width  = sizes.card + 'px';
+        img.style.height = sizes.card + 'px';
+      }
+      setSpriteWithFallback(img, spriteId, nombre);
+    }
+  });
+}, { rootMargin: '300px 0px' });
+
+// DEBOUNCE
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+}
+
+// VIRTUAL SCROLLER
+const CARD_HEIGHT = 370;
+const CARD_GAP    = 20;
+const CARD_MIN_W  = 230;
+const PADDING     = 24;
+
+class VirtualScroller {
+  constructor(container, createItem) {
+    this.container = container;
+    this.createItem = createItem;
+    this.items = [];
+    this._cardMap = new Map();
+    this._visibleRange = { start: 0, end: 0 };
+    this._columns = 1;
+    this._cardWidth = CARD_MIN_W;
+    this._isInitialRender = true;
+    this._prevScrollTop = 0;
+
+    container.style.position = 'relative';
+    container.style.overflowY = 'auto';
+    container.style.height = 'calc(100vh - 250px)';
+    container.style.padding = '1.2rem 0.8rem 3rem';
+
+    this._sentinel = document.createElement('div');
+    this._sentinel.style.width = '100%';
+    this.container.appendChild(this._sentinel);
+
+    this._onScroll = this._onScroll.bind(this);
+    this._onResize = this._onResize.bind(this);
+    this.container.addEventListener('scroll', this._onScroll, { passive: true });
+
+    if (window.ResizeObserver) {
+      this._ro = new ResizeObserver(this._onResize);
+      this._ro.observe(this.container);
+    }
+    window.addEventListener('resize', this._onResize);
+
+    this._updateDimensions();
+  }
+
+  _updateDimensions() {
+    const w = this.container.clientWidth;
+    const avail = w - PADDING;
+    this._columns = Math.max(1, Math.floor((avail + CARD_GAP) / (CARD_MIN_W + CARD_GAP)));
+    this._cardWidth = (avail - (this._columns - 1) * CARD_GAP) / this._columns;
+    this._updateTotalHeight();
+  }
+
+  _updateTotalHeight() {
+    const rows = Math.ceil(this.items.length / this._columns);
+    const h = Math.max(rows * CARD_HEIGHT + (rows - 1) * CARD_GAP + PADDING, this.container.clientHeight);
+    this._sentinel.style.height = h + 'px';
+  }
+
+  _getVisibleRange() {
+    const st = this.container.scrollTop;
+    const vh = this.container.clientHeight;
+    const rowH = CARD_HEIGHT + CARD_GAP;
+    const totalRows = Math.ceil(this.items.length / this._columns);
+    const startRow = Math.max(0, Math.floor(st / rowH) - 3);
+    const endRow   = Math.min(totalRows, Math.ceil((st + vh) / rowH) + 3);
+    return {
+      start: Math.max(0, startRow * this._columns),
+      end: Math.min(this.items.length, endRow * this._columns),
+    };
+  }
+
+  _onScroll() {
+    this._prevScrollTop = this.container.scrollTop;
+    this._isInitialRender = false;
+    this._render();
+  }
+
+  _onResize() {
+    this._updateDimensions();
+    for (const el of this._cardMap.values()) el.remove();
+    this._cardMap.clear();
+    this._visibleRange = { start: 0, end: 0 };
+    this._render();
+  }
+
+  _render() {
+    if (this.items.length === 0) {
+      for (const el of this._cardMap.values()) el.remove();
+      this._cardMap.clear();
+      if (!this.container.querySelector('.gc-empty')) {
+        const empty = document.createElement('div');
+        empty.className = 'gc-empty';
+        empty.textContent = 'NO SE ENCONTRARON POKÉMON';
+        this.container.appendChild(empty);
+      }
+      return;
+    }
+
+    const emptyEl = this.container.querySelector('.gc-empty');
+    if (emptyEl) emptyEl.remove();
+
+    const range = this._getVisibleRange();
+    if (!this._isInitialRender && range.start === this._visibleRange.start && range.end === this._visibleRange.end) return;
+    this._visibleRange = range;
+
+    for (const [idx, el] of this._cardMap) {
+      if (idx < range.start || idx >= range.end) {
+        el.remove();
+        this._cardMap.delete(idx);
+      }
+    }
+
+    const fragment = document.createDocumentFragment();
+    for (let i = range.start; i < range.end; i++) {
+      if (this._cardMap.has(i)) continue;
+      const el = this.createItem(this.items[i], i);
+      const row = Math.floor(i / this._columns);
+      const col = i % this._columns;
+      const leftPad = (this.container.clientWidth - this._columns * this._cardWidth - (this._columns - 1) * CARD_GAP) / 2;
+      el.style.position = 'absolute';
+      el.style.top  = (row * (CARD_HEIGHT + CARD_GAP) + 19) + 'px';
+      el.style.left = (col * (this._cardWidth + CARD_GAP) + leftPad) + 'px';
+      el.style.width = this._cardWidth + 'px';
+      el.style.height = CARD_HEIGHT + 'px';
+      el.style.overflow = 'hidden';
+      fragment.appendChild(el);
+      this._cardMap.set(i, el);
+    }
+    this.container.appendChild(fragment);
+    this._updateTotalHeight();
+  }
+
+  updateItems(items) {
+    for (const el of this._cardMap.values()) el.remove();
+    this._cardMap.clear();
+    this.items = items;
+    this._visibleRange = { start: 0, end: 0 };
+    this._isInitialRender = true;
+    this._updateTotalHeight();
+    this._render();
+  }
+
+  destroy() {
+    this.container.removeEventListener('scroll', this._onScroll);
+    window.removeEventListener('resize', this._onResize);
+    if (this._ro) this._ro.disconnect();
+    for (const el of this._cardMap.values()) el.remove();
+    this._cardMap.clear();
+    this.container.style.position = '';
+    this.container.style.overflowY = '';
+    this.container.style.height = '';
+    this.container.style.padding = '';
+  }
+}
+
+let scroller = null;
+
+function initScroller() {
   const grid = document.getElementById('grid');
-  const q    = currentSearch.toLowerCase();
+  if (scroller) scroller.destroy();
+  grid.innerHTML = '';
+  scroller = new VirtualScroller(grid, createCard);
+  applyFiltersAndRender();
+}
 
-  const filtered = allPokemons.filter(p => {
+function createCard(pokemon, index) {
+  const tiposBadges = pokemon.tipo.map(t =>
+    `<span class="gc-tipo" style="background:${TIPO_COLORS[t] || '#888'}">${t.toUpperCase()}</span>`
+  ).join('');
+  const ataquesTags = (pokemon.ataques || []).map(a =>
+    `<span class="gc-ataque">${a}</span>`
+  ).join('');
+
+  const card = document.createElement('div');
+  card.className = 'gc-card';
+  card.dataset.pkid = pokemon.id;
+  card.dataset.baseid = pokemon.base_id || '';
+  card.dataset.idx = index;
+  card.innerHTML = `
+    <div class="gc-card-bar">
+      <span class="gc-card-num">NO.${String(pokemon.id).padStart(3,'0')}</span>
+      <span class="gc-card-gen">GEN ${pokemon.generacion}</span>
+    </div>
+    <div class="gc-card-img">
+      <img data-id="${pokemon.id}" data-baseid="${pokemon.base_id || ''}" data-nombre="${(pokemon.nombre_forma || pokemon.nombre).replace(/'/g, "\\'")}" alt="${pokemon.nombre_forma || pokemon.nombre}"/>
+      <button class="gc-shiny-btn" title="Ver shiny">✨</button>
+      <div class="gc-sound">🔊</div>
+    </div>
+    <div class="gc-card-body">
+      <div class="gc-card-name">${pokemon.nombre}</div>
+      <div class="gc-tipos">${tiposBadges}</div>
+      <div class="gc-ataques">${ataquesTags}</div>
+    </div>
+    <div class="gc-region">${pokemon.region || ''}</div>`;
+
+  const img = card.querySelector('img');
+  spriteObserver.observe(img);
+  return card;
+}
+
+// FILTER + RENDER
+function getFilteredPokemons() {
+  const q = currentSearch.toLowerCase();
+  return allPokemons.filter(p => {
     const matchSearch = !q || p.nombre.toLowerCase().includes(q);
     const matchId     = !currentSearchId || p.id === parseInt(currentSearchId);
     const matchGen    = activeGens.size  === 0 || activeGens.has(p.generacion);
     const matchTipo   = activeTipos.size === 0 || p.tipo.some(t => activeTipos.has(t));
     return matchSearch && matchId && matchGen && matchTipo;
   });
-
-  document.getElementById('count').textContent = filtered.length;
-
-  if (!filtered.length) {
-    grid.innerHTML = '<div class="gc-empty">NO SE ENCONTRARON POKÉMON</div>';
-    return;
-  }
-
-  grid.innerHTML = filtered.map((p, i) => {
-    const tiposBadges = p.tipo.map(t =>
-      `<span class="gc-tipo" style="background:${TIPO_COLORS[t] || '#888'}">${t.toUpperCase()}</span>`
-    ).join('');
-
-    const ataquesTags = (p.ataques || []).map(a =>
-      `<span class="gc-ataque">${a}</span>`
-    ).join('');
-
-    // Nombre escapado para uso seguro en atributo onclick
-    const nombreEscaped = (p.nombre_forma || p.nombre).replace(/'/g, "\\'");
-
-    return `
-      <div class="gc-card" data-pkid="${p.id}" data-baseid="${p.base_id || ''}" data-idx="${i}" style="animation-delay:${i * 0.04}s" onclick="openModalCard(this)">
-        <div class="gc-card-bar">
-          <span class="gc-card-num">NO.${String(p.id).padStart(3,'0')}</span>
-          <span class="gc-card-gen">GEN ${p.generacion}</span>
-        </div>
-        <div class="gc-card-img">
-          <img data-id="${p.id}" data-baseid="${p.base_id || ''}" data-nombre="${p.nombre_forma || p.nombre}" alt="${p.nombre_forma || p.nombre}" src=""/>
-          <button class="gc-shiny-btn" title="Ver shiny" onclick="event.stopPropagation();toggleShiny(this,${p.base_id || p.id},'${nombreEscaped}')">✨</button>
-          <div class="gc-sound">🔊</div>
-        </div>
-        <div class="gc-card-body">
-          <div class="gc-card-name">${p.nombre}</div>
-          <div class="gc-tipos">${tiposBadges}</div>
-          <div class="gc-ataques">${ataquesTags}</div>
-        </div>
-        <div class="gc-region">${p.region || ''}</div>
-      </div>`;
-  }).join('');
-
-  // Cargar sprites para todos los Pokémon del grid
-  grid.querySelectorAll('img[data-id]').forEach(img => {
-    const rawId     = parseInt(img.dataset.id);
-    const poke      = allPokemons.find(x => x.id === rawId) || {};
-    const spriteId  = poke.base_id || rawId;
-    const nombre    = poke.nombre_forma || poke.nombre || img.dataset.nombre || img.alt;
-
-    // Aplicar tamaño custom si existe en sprite_sizes.json (chequear tanto variant como base)
-    const sizes = SPRITE_SIZES[String(rawId)] || SPRITE_SIZES[String(spriteId)];
-    if (sizes && sizes.card) {
-      img.style.width  = sizes.card + 'px';
-      img.style.height = sizes.card + 'px';
-    }
-    setSpriteWithFallback(img, spriteId, nombre);
-  });
 }
 
-// ══════════════════════════════════════════════════════
-// FILTROS Y BÚSQUEDA — Event listeners
-// ══════════════════════════════════════════════════════
+function applyFiltersAndRender() {
+  if (!scroller || !dataLoaded) return;
+  const filtered = getFilteredPokemons();
+  document.getElementById('count').textContent = filtered.length;
+  scroller.updateItems(filtered);
+}
 
-document.querySelectorAll('.gc-btn[data-filter^="gen:"]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const gen = parseInt(btn.dataset.filter.split(':')[1]);
-    if (activeGens.has(gen)) {
-      activeGens.clear();
-      btn.classList.remove('active');
-    } else {
-      activeGens.clear();
-      document.querySelectorAll('.gc-btn[data-filter^="gen:"]').forEach(b => b.classList.remove('active'));
-      activeGens.add(gen);
-      btn.classList.add('active');
-    }
-    render();
-  });
-});
+const debouncedRender = debounce(applyFiltersAndRender, 100);
 
-document.querySelectorAll('.gc-tipo-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tipo = btn.dataset.filter.split(':')[1];
-    if (activeTipos.has(tipo)) {
-      activeTipos.delete(tipo);
-      btn.classList.remove('active');
-    } else {
-      if (activeTipos.size >= 2) {
-        const primero = activeTipos.values().next().value;
-        activeTipos.delete(primero);
-        document.querySelector(`.gc-tipo-btn[data-filter="tipo:${primero}"]`)?.classList.remove('active');
-      }
-      activeTipos.add(tipo);
-      btn.classList.add('active');
-    }
-    render();
-  });
-});
-
-document.getElementById('search').addEventListener('input', e => {
-  currentSearch = e.target.value;
-  render();
-});
-
-document.getElementById('searchId').addEventListener('input', e => {
-  currentSearchId = e.target.value.trim();
-  render();
-});
-
-// ══════════════════════════════════════════════════════
-// HELPERS DE ESTADÍSTICAS
-// ══════════════════════════════════════════════════════
-
+// STATS
 function getStatClass(v) {
   if (v < 50)  return 'stat-low';
   if (v < 80)  return 'stat-mid';
   if (v < 110) return 'stat-high';
   return 'stat-great';
 }
-
 function getStatNumColor(v) {
   if (v < 50)  return '#e05050';
   if (v < 80)  return '#d4a020';
   if (v < 110) return '#40a840';
   return '#2288CC';
 }
-
 function renderStats(stats) {
   const c = document.getElementById('modalStats');
   if (!stats) {
@@ -403,65 +493,47 @@ function renderStats(stats) {
       <span class="modal-stat-total-lbl">TOTAL</span>
       <span class="modal-stat-total-num">${total}</span>
     </div>`;
-
-  // Animación de las barras (pequeño delay para que el CSS transition sea visible)
   setTimeout(() => {
     c.querySelectorAll('.modal-stat-bar-fill').forEach(b => b.style.width = b.dataset.target);
   }, 80);
 }
 
-// ══════════════════════════════════════════════════════
-// MODAL — Abrir / Cerrar / Shiny
-// ══════════════════════════════════════════════════════
-
+// MODAL
 let currentModalId   = null;
 let currentModalName = null;
+let currentModalBaseId = null;
 let modalIsShiny     = false;
 
 function openModalCard(el) {
-  const pkid = parseInt(el.dataset.pkid);
+  const pkid   = parseInt(el.dataset.pkid);
   const baseid = el.dataset.baseid ? parseInt(el.dataset.baseid) : null;
   const nombre = el.dataset.nombre;
-
-  // Preferir la entrada que coincida con id + base_id o nombre_forma
   let p = allPokemons.find(x => x.id === pkid && ((baseid && x.base_id === baseid) || (x.nombre_forma && x.nombre_forma === nombre)));
   if (!p && baseid) p = allPokemons.find(x => x.id === pkid && x.base_id === baseid);
   if (!p) p = allPokemons.find(x => x.id === pkid);
   if (!p) return;
-
   openModal(p);
 }
 
 function openModal(idOrP) {
   const p = (typeof idOrP === 'object') ? idOrP : allPokemons.find(x => x.id === idOrP);
   if (!p) return;
-
   currentModalId      = p.id;
   currentModalBaseId  = p.base_id || p.id;
   currentModalName    = p.nombre_forma || p.nombre;
-
-  // Reproducir grito (usar base_id para archivos de audio)
   if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
   const audio = new Audio(CRY_URL(currentModalBaseId));
   currentAudio = audio;
   audio.play().catch(() => {});
-
-  // Barra título
   document.getElementById('modalBarTitle').textContent = `INFO. POKÉMON — ${(p.nombre_forma || p.nombre).toUpperCase()}`;
-
-  // Resetear estado shiny
   modalIsShiny = false;
   document.getElementById('modalShinyBtn').classList.remove('active');
   document.getElementById('modalSprite').closest('.modal-sprite-wrap').classList.remove('shiny');
   document.getElementById('modalShinyBtn').title = 'Ver shiny';
-
-  // Sprite
   const spriteEl = document.getElementById('modalSprite');
   spriteEl.dataset.pkid = p.id;
   spriteEl.alt = p.nombre_forma || p.nombre;
   document.getElementById('modalLoader').classList.add('visible');
-
-  // Aplicar tamaño custom modal si existe en sprite_sizes.json
   const customSizes = SPRITE_SIZES[String(p.id)] || SPRITE_SIZES[String(currentModalBaseId)];
   if (customSizes && customSizes.modal) {
     spriteEl.style.width  = customSizes.modal + 'px';
@@ -471,18 +543,12 @@ function openModal(idOrP) {
     spriteEl.style.height = '170px';
   }
   setSpriteWithFallback(spriteEl, currentModalBaseId, currentModalName, document.getElementById('modalLoader'));
-
-  // Datos básicos
   document.getElementById('modalNum').textContent       = `NO.${String(p.id).padStart(3, '0')}`;
   document.getElementById('modalName').textContent      = p.nombre;
   document.getElementById('modalNameNum').textContent   = `NO.${String(p.id).padStart(3, '0')}`;
   document.getElementById('modalRegion').textContent    = p.region || '—';
   document.getElementById('modalGen').textContent       = `GEN ${p.generacion}`;
-
-  // Stats
   renderStats(p.stats || null);
-
-  // Perfil (perfiles.json)
   const perf = PERFILES[String(p.id)] || {};
   const setField = (id, val, placeholder) => {
     const el = document.getElementById(id);
@@ -493,18 +559,12 @@ function openModal(idOrP) {
   setField('modalPeso',        perf.peso,        'Pendiente de añadir');
   setField('modalEspecie',     perf.especie,     'Pendiente de añadir');
   setField('modalDescripcion', perf.descripcion, 'Sin descripción registrada todavía.');
-
-  // Tipos
   document.getElementById('modalTipos').innerHTML = p.tipo.map(t =>
     `<span class="modal-tipo" style="background:${TIPO_COLORS[t] || '#888'}">${t.toUpperCase()}</span>`
   ).join('');
-
-  // Ataques
   document.getElementById('modalAtaques').innerHTML = (p.ataques || []).map(a =>
     `<span class="modal-ataque">${a}</span>`
   ).join('');
-
-  // Curiosidades (curiosidades.json)
   const curiosidades = CURIOSIDADES[String(p.id)] || [];
   const container    = document.getElementById('modalCuriosidades');
   if (curiosidades.length === 0) {
@@ -517,7 +577,6 @@ function openModal(idOrP) {
       </div>`
     ).join('');
   }
-
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -527,7 +586,6 @@ function toggleModalShiny() {
   const img  = document.getElementById('modalSprite');
   const wrap = img.closest('.modal-sprite-wrap');
   modalIsShiny = !modalIsShiny;
-
   if (modalIsShiny) {
     btn.classList.add('active');
     wrap.classList.add('shiny');
@@ -540,60 +598,126 @@ function toggleModalShiny() {
     setSpriteWithFallback(img, currentModalId, currentModalName, document.getElementById('modalLoader'));
   }
 }
-
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
   document.body.style.overflow = '';
   currentModalId   = null;
   currentModalName = null;
 }
-
 function closeModalOutside(e) {
   if (e.target === document.getElementById('modalOverlay')) closeModal();
 }
 
-// ══════════════════════════════════════════════════════
-// SPRITE VIEWER — Galería normal + shiny
-// ══════════════════════════════════════════════════════
-
+// SPRITE VIEWER
 function openSpriteViewer() {
   if (!currentModalId) return;
   const p  = allPokemons.find(x => x.id === currentModalId);
   const baseId = currentModalBaseId || currentModalId;
-
   document.getElementById('svPokeName').textContent = p ? (p.nombre_forma || p.nombre).toUpperCase() : `#${baseId}`;
-
-  setSpriteWithFallback(
-    document.getElementById('svFront'),
-    baseId, p ? (p.nombre_forma || p.nombre) : '',
-    document.getElementById('svFrontLoader')
-  );
-  setShinyWithFallback(
-    document.getElementById('svShinyFront'),
-    baseId, p ? (p.nombre_forma || p.nombre) : '',
-    document.getElementById('svShinyLoader')
-  );
-
+  setSpriteWithFallback(document.getElementById('svFront'), baseId, p ? (p.nombre_forma || p.nombre) : '', document.getElementById('svFrontLoader'));
+  setShinyWithFallback(document.getElementById('svShinyFront'), baseId, p ? (p.nombre_forma || p.nombre) : '', document.getElementById('svShinyLoader'));
   document.getElementById('svOverlay').classList.add('open');
 }
+function closeSpriteViewer() { document.getElementById('svOverlay').classList.remove('open'); }
+function closeSVOutside(e) { if (e.target === document.getElementById('svOverlay')) closeSpriteViewer(); }
 
-function closeSpriteViewer() {
-  document.getElementById('svOverlay').classList.remove('open');
-}
-
-function closeSVOutside(e) {
-  if (e.target === document.getElementById('svOverlay')) closeSpriteViewer();
-}
-
-// Cerrar con tecla Escape
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeSpriteViewer();
-    closeModal();
-  }
+  if (e.key === 'Escape') { closeSpriteViewer(); closeModal(); }
 });
 
-// ══════════════════════════════════════════════════════
-// INICIO
-// ══════════════════════════════════════════════════════
-loadPokemons();
+// EVENT DELEGATION — Grid clicks (virtual scroller compatible)
+document.getElementById('grid').addEventListener('click', (e) => {
+  const shinyBtn = e.target.closest('.gc-shiny-btn');
+  if (shinyBtn) {
+    e.stopPropagation();
+    const card  = shinyBtn.closest('.gc-card');
+    const img   = card.querySelector('img[data-id]');
+    const id    = parseInt(img.dataset.id);
+    const poke  = allPokemons.find(x => x.id === id) || {};
+    const sId   = poke.base_id || id;
+    const nombre = poke.nombre_forma || poke.nombre;
+    toggleShiny(shinyBtn, sId, nombre);
+    return;
+  }
+  const soundBtn = e.target.closest('.gc-sound');
+  if (soundBtn) {
+    const card = soundBtn.closest('.gc-card');
+    const id   = parseInt(card.dataset.pkid);
+    playSound(id, card);
+    return;
+  }
+  const card = e.target.closest('.gc-card');
+  if (card) openModalCard(card);
+});
+
+// FILTERS (debounced)
+document.querySelectorAll('.gc-btn[data-filter^="gen:"]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const gen = parseInt(btn.dataset.filter.split(':')[1]);
+    if (activeGens.has(gen)) {
+      activeGens.clear();
+      btn.classList.remove('active');
+    } else {
+      activeGens.clear();
+      document.querySelectorAll('.gc-btn[data-filter^="gen:"]').forEach(b => b.classList.remove('active'));
+      activeGens.add(gen);
+      btn.classList.add('active');
+    }
+    debouncedRender();
+  });
+});
+
+document.querySelectorAll('.gc-tipo-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tipo = btn.dataset.filter.split(':')[1];
+    if (activeTipos.has(tipo)) {
+      activeTipos.delete(tipo);
+      btn.classList.remove('active');
+    } else {
+      if (activeTipos.size >= 2) {
+        const primero = activeTipos.values().next().value;
+        activeTipos.delete(primero);
+        document.querySelector(`.gc-tipo-btn[data-filter="tipo:${primero}"]`)?.classList.remove('active');
+      }
+      activeTipos.add(tipo);
+      btn.classList.add('active');
+    }
+    debouncedRender();
+  });
+});
+
+document.getElementById('search').addEventListener('input', debounce(e => {
+  currentSearch = e.target.value;
+  applyFiltersAndRender();
+}, 150));
+
+document.getElementById('searchId').addEventListener('input', debounce(e => {
+  currentSearchId = e.target.value.trim();
+  applyFiltersAndRender();
+}, 150));
+
+// INIT
+(async function init() {
+  document.getElementById('count').textContent = '...';
+
+  const cached = await loadFromCache('pokemons');
+  if (cached) {
+    allPokemons  = cached;
+    PERFILES     = await loadFromCache('perfiles') || {};
+    CURIOSIDADES = await loadFromCache('curiosidades') || {};
+    SPRITE_SIZES = await loadFromCache('sprite_sizes') || {};
+    dataLoaded   = true;
+    initScroller();
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  dataWorker.postMessage({
+    type: 'LOAD_ALL',
+    payload: {
+      urls: ['pokemons.json', 'perfiles.json', 'curiosidades.json', 'sprite_sizes.json'],
+    },
+  });
+})();
